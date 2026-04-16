@@ -8,6 +8,12 @@ class Calculator
         "-" => MinusCommand,
         "*" => MultiplyCommand,
         "/" => DivideCommand,
+        "--" => NegativeCommand,
+        "sqrt" => SqrtCommand,
+        "sin" => SinCommand,
+        "cos" => CosCommand,
+        "tan" => TanCommand,
+        "ctan" => CtanCommand,
         "mod" => AbsCommand,
         "pow" => PowCommand,
         "exp" => ExpCommand,
@@ -20,33 +26,24 @@ class Calculator
         "primes" => PrimesCommand
     }
 
+    @@ONE_ARGUMENT_COMMANDS = ["mod", "exp", "ln", "!", "--", "sqrt", "sin", "cos", "tan", "ctan", "mw", "push", "mr", "pop"]
+    @@TWO_ARGUMENTS_COMMANDS = ["+", "-", "*", "/", "pow", "primes"]
+
     def initialize()
         puts "Calculator has started"
-        self.num1 = ask_num1()
+        self.num1 = ask_num()
         self.num2 = 0
         self.stack = []
 
         @commands = @@commands.transform_values { |command_class| command_class.new(self) }
     end
 
-    def ask_num1()
+    def ask_num()
         while true
-            num1 = gets.chomp
+            num = gets.chomp
 
             begin
-                return Integer(num1)
-            rescue ArgumentError
-                puts "Помилка: це не число"
-            end
-        end
-    end
-
-    def ask_num2()
-        while true
-            num2 = gets.chomp
-
-            begin
-                return Integer(num2)
+                return Integer(num)
             rescue ArgumentError
                 puts "Помилка: це не число"
             end
@@ -179,98 +176,66 @@ class Calculator
         primes.last
     end
 
+    def run_command(operator)
+      command = @commands[operator]
+
+      if @@TWO_ARGUMENTS_COMMANDS.include?(operator)
+        self.num2 = ask_num
+        return command.execute(num1, num2)
+
+      elsif @@ONE_ARGUMENT_COMMANDS.include?(operator)
+        return special_command(operator, command)
+
+      else
+        puts "Помилка команди"
+        nil
+      end
+    end
+
     def calculate()
-        num1 = self.num1
-        num2 = self.num2
         while true
             puts "Введіть операцію (+, -, *, /, mod, pow, --, sqrt, sin, cos, tan, ctan, exp, ln, !, mw (mem write), mr (mem read), stop,  primes, push, pop):"
             operator = gets.chomp
 
-            result = nil
-            case operator
-                when "+"
-                    num2 = ask_num2()
-                    result = @commands["+"] .execute(num1, num2)
+            break if operator == "stop"
 
-                when "-"
-                    num2 = ask_num2()
-                    result = @commands["-"] .execute(num1, num2)
-
-                when "*"
-                    num2 = ask_num2()
-                    result = @commands["*"] .execute(num1, num2)
-
-                when "/"
-                    num2 = ask_num2()
-                    result = @commands["/"] .execute(num1, num2)
-
-                when "mod"
-                    result = @commands["mod"] .execute(num1)
-
-                when "pow"
-                    num2 = ask_num2()
-                    result = @commands["pow"] .execute(num1, num2)
-
-                when "--"
-                    result = @commands["--"] .execute(num1)
-
-                when "sqrt"
-                    result = @commands["sqrt"] .execute(num1)
-
-                when "sin"
-                    result = @commands["sin"] .execute(num1)
-
-                when "cos"
-                    result = @commands["cos"] .execute(num1)
-
-                when "tan"
-                    result = @commands["tan"] .execute(num1)
-
-                when "ctan"
-                    result = @commands["ctan"] .execute(num1)
-
-                when "exp"
-                    result = @commands["exp"] .execute(num1)
-
-                when "ln"
-                    result = @commands["ln"] .execute(num1)
-
-                when "!"
-                    result = @commands["!"] .execute(num1)
-
-                when "mw"
-                    @commands["mw"].execute(num1)
-                    num1 = ask_num1()
-                    next
-
-                when "mr"
-                    num1 = @commands["mr"].execute()
-                    puts num1
-
-                when "stop"
-                    puts "Зупинка калькулятора"
-                    break
-
-                when "push"
-                    @commands["push"].execute(num1)
-                    puts num1
-                    num1 = ask_num1()
-                    next
-
-                when "pop"
-                    result = @commands["pop"].execute()
-
-                when "primes"
-                    num2 = ask_num2()
-
-                    result = @commands["primes"].execute(num1, num2)
+            unless @commands.key?(operator)
+              puts "Невідома команда"
+              next
             end
 
-            if result
-                puts result
+            result = run_command(operator)
 
-                num1 = result
+            unless result.nil?
+              puts result
+              self.num1 = result
             end
+        end
+
+        puts "Зупинка калькулятора"
+    end
+
+    def special_command(operator, command)
+        case operator
+        when "mw"
+          command.execute(num1)
+          self.num1 = ask_num
+          nil
+
+        when "mr"
+          command.execute
+
+        when "push"
+          command.execute(num1)
+          puts num1
+          self.num1 = ask_num
+          nil
+
+        when "pop"
+          command.execute
+
+        else
+          command.execute(num1)
         end
     end
 end

@@ -4,7 +4,7 @@ class Command
   end
 
   def execute
-    raise NotImplementedError, "Subclasses must implement the execute method"
+    raise NotImplementedError, "Похідний клас має містити реалізацію"
   end
 end
 
@@ -53,6 +53,42 @@ end
 class LnCommand < Command
   def execute(num1)
     @object.ln(num1)
+  end
+end
+
+class SqrtCommand < Command
+  def execute(num1)
+    @object.sqrt(num1)
+  end
+end
+
+class NegativeCommand < Command
+  def execute(num1)
+    @object.negative(num1)
+  end
+end
+
+class SinCommand < Command
+  def execute(num1)
+    @object.sin(num1)
+  end
+end
+
+class CosCommand < Command
+  def execute(num1)
+    @object.cos(num1)
+  end
+end
+
+class TanCommand < Command
+  def execute(num1)
+    @object.tan(num1)
+  end
+end
+
+class CtanCommand < Command
+  def execute(num1)
+    @object.ctan(num1)
   end
 end
 
